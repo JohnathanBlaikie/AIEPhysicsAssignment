@@ -11,42 +11,39 @@
 
 #include "raylib.h"
 
+#include "game.h"
+
+#include "glm/glm.hpp"
+// #include "glm.hpp" // this only works if your addl' include directories explicitly
+//					     referenced the glm folder
+
 int main()
 {
-	// Initialization
-	//--------------------------------------------------------------------------------------
-	int screenWidth = 800;
-	int screenHeight = 450;
+	game app;
 
-	InitWindow(screenWidth, screenHeight, "raylib [core] example - basic window");
+	app.init();
+	app.fixedTimeStep = 1.0f / 30.0f;
 
-	SetTargetFPS(60);
-	//--------------------------------------------------------------------------------------
+	bool shouldRun = true;
 
 	// Main game loop
-	while (!WindowShouldClose())    // Detect window close button or ESC key
+	while (shouldRun)    // Detect window close button or ESC key
 	{
 		// Update
 		//----------------------------------------------------------------------------------
 		// TODO: Update your variables here
 		//----------------------------------------------------------------------------------
+		shouldRun = app.tick();
+
+		while (app.shouldTickPhysics())
+		{
+			app.tickPhysics();
+		}
 
 		// Draw
-		//----------------------------------------------------------------------------------
-		BeginDrawing();
-
-		ClearBackground(RAYWHITE);
-
-		DrawText("Congrats! You created your first window!", 190, 200, 20, LIGHTGRAY);
-
-		EndDrawing();
-		//----------------------------------------------------------------------------------
+		app.draw();
 	}
-
-	// De-Initialization
-	//--------------------------------------------------------------------------------------   
-	CloseWindow();        // Close window and OpenGL context
-	//--------------------------------------------------------------------------------------
+	app.exit();
 
 	return 0;
-}
+}	
