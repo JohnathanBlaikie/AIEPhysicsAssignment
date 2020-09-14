@@ -50,6 +50,7 @@ void physObject::addImpulse(glm::vec2 impulse)
 }
 void physObject::addDrag(glm::vec2 velo)
 {
+	//vel -= mass / velo;
 	vel -= velo / mass;
 }
 void physObject::makeLine(Vector2 v2Start, Vector2 v2End)

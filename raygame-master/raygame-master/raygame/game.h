@@ -1,11 +1,23 @@
 #pragma once
 #include <vector>
+#include <unordered_map>
+
 #include "physObject.h"
+
+using collisionPair = uint8_t;
+using collisionFunc = bool(*)(glm::vec2, collider, glm::vec2, collider);
+using collisionMap = std::unordered_map<collisionPair, collisionFunc>;
+
+using depenetrationFunc = glm::vec2(*)(glm::vec2, collider, glm::vec2, collider, float&);
+using depenetrationMap = std::unordered_map<collisionPair, depenetrationFunc>;
 
 class game
 {
 	float accumulatedDeltaTime;
 	std::vector<physObject> physObjects;
+	static collisionMap collisionCheckers;
+	static depenetrationMap depenetrationFuncs;
+
 public:
 	game();
 

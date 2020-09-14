@@ -3,6 +3,8 @@
 #include "glm/glm.hpp"
 #include "raylib.h"
 #include "shapes.h"
+
+
 class physObject
 {
 	//forces

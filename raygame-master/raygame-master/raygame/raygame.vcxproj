@@ -137,6 +137,7 @@
     <ClCompile Include="shapes.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="enumUtils.h" />
     <ClInclude Include="game.h" />
     <ClInclude Include="physObject.h" />
     <ClInclude Include="shapes.h" />

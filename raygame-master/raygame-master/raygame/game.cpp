@@ -5,9 +5,34 @@
 #include <cstdlib>
 #include <vector>
 
-
 #include "raylib.h"
+#include "enumUtils.h"
 
+collisionMap setupCollisionChecks()
+{
+	collisionMap map;
+
+	map[static_cast<collisionPair>(shapeType::Circle | shapeType::Circle)] = checkCircleCircle;
+	
+	return map;
+
+}
+
+depenetrationMap setupDepenetrationFuncs()
+{
+	depenetrationMap map;
+
+	map[(collisionPair)(shapeType::Circle | shapeType::Circle)] = depenetrateCircleCircle;
+
+	//TODO: ADD CIRCLE-AABB depen
+	//TODO: ADD AABB-AABB depen
+
+	return map;
+}
+
+collisionMap game::collisionCheckers = setupCollisionChecks();
+depenetrationMap game::depenetrationFuncs = setupDepenetrationFuncs();
+// RETURN_TYPE(*)(PARAMETER_TYPES)
 
 // inclusion order
 // - header that I am implementing
@@ -56,6 +81,7 @@ bool game::tick()
 		physObject baby;
 		baby.pos = { cursorPosEnd.x, cursorPosEnd.y };
 		baby.mass = (rand() % 10) + 1;
+		baby.shape.circleData.radius = baby.mass;
 		baby.addImpulse({ (cursorPosStart.x - cursorPosEnd.x)*10,(cursorPosStart.y - cursorPosEnd.y)*10 });
 		physObjects.push_back(baby);
 	}
@@ -73,7 +99,7 @@ bool game::tick()
 	//
 	//}
 
-	std::cout << "do update" << std::endl;
+	//std::cout << "do update" << std::endl;
 
 	return !WindowShouldClose();
 }
@@ -82,14 +108,61 @@ void game::tickPhysics()
 {
 	accumulatedDeltaTime -= fixedTimeStep;
 
+	for (auto& lhs : physObjects)
+	{
+		for (auto& rhs : physObjects)
+		{
+			if (&lhs == &rhs) { continue; }
+
+			auto *first = &lhs;
+			auto *second = &rhs;
+
+			if (static_cast<uint8_t>(lhs.shape.colliderShape) >
+				static_cast<uint8_t>(rhs.shape.colliderShape))
+			{
+				first = &rhs;
+				second = &lhs;
+			}
+
+			collisionPair pairType = static_cast<collisionPair>(lhs.shape.colliderShape | rhs.shape.colliderShape);
+			bool collision = collisionCheckers[pairType](first->pos, first->shape, second->pos, second->shape);
+
+
+			if (collision)
+			{
+				float pen = 0.0f;
+
+				glm::vec2 normal = depenetrationFuncs[pairType](first->pos, first->shape,
+																second->pos, second->shape,
+																pen);
+
+				glm::vec2 resImpulses[2];
+				resolveCollision(first->pos, first->vel, first->mass,
+								 second->pos, second->vel, second->mass,
+								 1.0f, normal, resImpulses);
+
+				first->pos += normal * pen;
+				second->pos -= normal * pen;
+
+				first->vel = resImpulses[0];
+				second->vel = resImpulses[1];
+
+			}
+
+			//if (checkCircleCircle(lhs.pos, lhs.shape.circleData, rhs.pos, rhs.shape.circleData)) {
+			//	std::cout << "Collision!\n";
+			//}
+		}
+	}
+
 	for (auto& obj : physObjects)
 	{
 		obj.tickPhysics(fixedTimeStep);
-		obj.addDrag(obj.vel);
+		//obj.addDrag(obj.vel);
 	}
 
 	// do physics!
-	std::cout << "do physics" << std::endl;
+	//std::cout << "do physics" << std::endl;
 }
 
 bool game::shouldTickPhysics() const
