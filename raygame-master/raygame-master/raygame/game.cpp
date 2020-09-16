@@ -14,6 +14,11 @@ collisionMap setupCollisionChecks()
 
 	map[static_cast<collisionPair>(shapeType::Circle | shapeType::Circle)] = checkCircleCircle;
 	
+	map[static_cast<collisionPair>(shapeType::AABB | shapeType::AABB)] = checkAABB2;
+
+	map[static_cast<collisionPair>(shapeType::AABB | shapeType::Circle)] = checkAABBCircle;
+
+
 	return map;
 
 }
@@ -23,6 +28,8 @@ depenetrationMap setupDepenetrationFuncs()
 	depenetrationMap map;
 
 	map[(collisionPair)(shapeType::Circle | shapeType::Circle)] = depenetrateCircleCircle;
+	map[(collisionPair)(shapeType::AABB | shapeType::AABB)] = depenetrateAABB2;
+	//map[(collisionPair)(shapeType::AABB | shapeType::Circle)] = depenetrateAABBCircle;
 
 	//TODO: ADD CIRCLE-AABB depen
 	//TODO: ADD AABB-AABB depen
@@ -69,6 +76,11 @@ bool game::tick()
 		cursorPosStart = GetMousePosition();
 		isMouseClicked = true;
 	}
+	else if (IsMouseButtonPressed(1))
+	{
+		cursorPosStart = GetMousePosition();
+		isMouseClicked = true;
+	}
 	if (isMouseClicked)
 	{
 		physObject line;
@@ -79,10 +91,27 @@ bool game::tick()
 	{
 		isMouseClicked = false;
 		physObject baby;
+		baby.shape = { shapeType::Circle };
 		baby.pos = { cursorPosEnd.x, cursorPosEnd.y };
-		baby.mass = (rand() % 10) + 1;
+		baby.mass = (rand() % 20 + 5);
+		//baby.mass = (rand() % 10) + 1;
+		//baby.mass = 10;
 		baby.shape.circleData.radius = baby.mass;
 		baby.addImpulse({ (cursorPosStart.x - cursorPosEnd.x)*10,(cursorPosStart.y - cursorPosEnd.y)*10 });
+		physObjects.push_back(baby);
+	}
+	else if (IsMouseButtonReleased(1))
+	{
+		isMouseClicked = false;
+		physObject baby;
+		baby.shape = { shapeType::AABB };
+		baby.pos = { cursorPosEnd.x, cursorPosEnd.y };
+		baby.mass = (rand() % 20 + 5);
+		//baby.mass = (rand() % 10) + 1;
+		//baby.mass = 10;
+		baby.shape.boxData.width = baby.mass;
+		baby.shape.boxData.length = baby.mass;
+		baby.addImpulse({ (cursorPosStart.x - cursorPosEnd.x) * 10,(cursorPosStart.y - cursorPosEnd.y) * 10 });
 		physObjects.push_back(baby);
 	}
 
@@ -98,8 +127,22 @@ bool game::tick()
 	//	physObjects.push_back(baby);
 	//
 	//}
-
-	//std::cout << "do update" << std::endl;
+	if (IsMouseButtonPressed(2))
+	{
+		auto cursorPos = GetMousePosition();
+	
+		physObject baby;
+		baby.shape = {shapeType::AABB};
+		baby.pos = { cursorPos.x,cursorPos.y };
+		//baby.mass = (rand() % 10) + 5;
+		baby.mass = 100;
+		baby.shape.boxData.length = baby.mass;
+		baby.shape.boxData.width = baby.mass;
+		//baby.addImpulse({ cursorPos.x,cursorPos.y });
+		physObjects.push_back(baby);
+	
+	}
+	std::cout << "\n" << std::endl;
 
 	return !WindowShouldClose();
 }
@@ -124,12 +167,27 @@ void game::tickPhysics()
 				second = &lhs;
 			}
 
-			collisionPair pairType = static_cast<collisionPair>(lhs.shape.colliderShape | rhs.shape.colliderShape);
+			collisionPair pairType = (collisionPair)(lhs.shape.colliderShape | rhs.shape.colliderShape);
+
+			if (collisionCheckers.find(pairType) == collisionCheckers.end())
+			{
+				continue;
+			}
+			//collisionCheckers<int, shapeType> test = { {1, shapeType::AABB},{2, shapeType::AABB} };
+			//auto search = test.find(2);
+			//if (search != test.end()) {
+			//	std::cout << "Found " << search->first << " " << search->second << '\n';
+			//}
+			//else {
+			//	std::cout << "Not found\n";
+			//}
+
 			bool collision = collisionCheckers[pairType](first->pos, first->shape, second->pos, second->shape);
 
 
 			if (collision)
 			{
+				std::cout << "Collision!\n";
 				float pen = 0.0f;
 
 				glm::vec2 normal = depenetrationFuncs[pairType](first->pos, first->shape,
@@ -140,6 +198,7 @@ void game::tickPhysics()
 				resolveCollision(first->pos, first->vel, first->mass,
 								 second->pos, second->vel, second->mass,
 								 1.0f, normal, resImpulses);
+				pen *= .51f;
 
 				first->pos += normal * pen;
 				second->pos -= normal * pen;
@@ -168,6 +227,11 @@ void game::tickPhysics()
 bool game::shouldTickPhysics() const
 {
 	return accumulatedDeltaTime >= fixedTimeStep;
+}
+
+void game::screenWrap()
+{
+
 }
 
 void game::draw() const

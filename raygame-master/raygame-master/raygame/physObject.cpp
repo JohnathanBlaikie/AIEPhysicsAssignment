@@ -3,7 +3,11 @@
 #include "raylib.h"
 physObject::physObject()
 {
+	
 	pos = glm::vec2{ 0,0 };
+	length = 0.0f;
+	width = 0.0f;
+
 	vel = glm::vec2{ 0,0 };
 	forces = glm::vec2{ 0,0 };
 
@@ -30,8 +34,9 @@ void physObject::draw() const
 		DrawPixel((int)pos.x, (int)pos.y, RED);
 	case shapeType::Circle:
 		DrawCircleLines((int)pos.x, (int)pos.y, shape.circleData.radius, RED);
-	//case shapeType::AABB:
-	//	assert(false && "AABB not yet implemented");
+	case shapeType::AABB:
+		DrawRectangleLines((int)pos.x, (int)pos.y, shape.boxData.length, shape.boxData.width, GREEN);
+	
 	default:
 		break;
 	}

@@ -17,7 +17,12 @@ public:
 	glm::vec2 vel;
 	//mass
 	float mass;
+	//length
+	float length;
+	//width
+	float width;
 	
+
 	collider shape;
 
 	//constructor (defaults)

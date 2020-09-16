@@ -24,8 +24,12 @@ public:
 	bool isMouseClicked;
 	Vector2 cursorPosStart = Vector2{ 0,0 };
 	Vector2 cursorPosEnd = Vector2{ 0,0 };
+
 	// Time between every fixed update
 	float fixedTimeStep;
+
+	// Wrap the Screen
+	void screenWrap();
 
 	// Create our window and initialize our rendering context
 	void init();
